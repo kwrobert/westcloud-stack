@@ -1,0 +1,107 @@
+#####################################################################################################
+# Script: cluster.yaml
+# Author: Kyle Robertson
+# Date: September 18, 2015
+# Company: Worlcom Exchange Inc.
+# Description: A HEAT template that deploys the networking resources for the autoscale_cluster_yaml
+# stack
+#####################################################################################################
+
+heat_template_version: 2014-10-16
+description: Homogenous compute cluster
+
+parameters:
+    # Networking parameters
+    network_name:
+      type: string
+      label: Network Name
+      description: A short, descriptive name for the internal network of this computing cluster
+      constraints:
+        - allowed_pattern: "^[A-Za-z]+[a-zA-Z0-9_-]*$"
+    subnet_cidr:
+      type: string
+      label: Internal Subnet CIDR
+      description: "The CIDR of the subnet instances will connect to. Ex: 10.20.30.0/24"
+      constraints:
+        - allowed_pattern: "^[0-9]+.[0-9]+.[0-9]+.[0-9]+/[0-9]+$"    
+    external_network:
+      type: string
+      label: External Network UUID
+      description: UUID of the external network where floating IP's for environment exist
+      default: net04_ext
+    source_network:
+      type: string
+      label: Source Network CIDR
+      description: >
+        CIDR of subnet that all traffic to the head node will be 
+        coming from
+    # Computing parameters
+    cluster_size:
+      type: number
+      description: Minimum number of servers in the compute node cluster
+      constraints:
+        - range: {min: 2, max: 20}
+      default: 2
+    image:
+      type: string
+      label: Image name or ID
+      description: Bootable image used to boot all instances
+      default: CentOS 7
+    flavor:
+      type: string
+      label: Instance flavor
+      description: Type of flavor that defines virtual resources for instance
+      constraints:
+        - allowed_values: 
+          - m1.small
+          - m1.medium
+          - m1.large
+      default: m1.large
+    keypair:
+      type: string
+      label: Keypair Name
+      description: Name of preexisting keypair to use for ssh access to instances 
+      
+resources:
+    networking_infrastructure:
+      type: cluster_network.yaml
+      properties:
+        network_name: {get_param: network_name}
+        subnet_cidr: {get_param: subnet_cidr}
+        external_network: {get_param: external_network}
+        source_cidr: {get_param: source_network}
+    
+    headnode:
+      type: headnode.yaml
+      depends_on: compute_infrastructure
+      properties:
+        flavor: {get_param: flavor}
+        image: {get_param: image}
+        key_name: {get_param: keypair}
+        internal_network: {get_param: network_name}
+        external_network: {get_param: external_network}
+        sec_group: {get_attr: [networking_infrastructure, headnode_sec_group]}
+            
+    compute_infrastructure:
+      type: compute_node_cluster.yaml
+      properties:
+        internal_net: {get_attr: [networking_infrastructure, compute_net]} 
+        flavor: { get_param: flavor }
+        image: { get_param: image }
+        ssh_key: {get_param: keypair}
+        cluster_size: {get_param: cluster_size}
+        internal_net: { get_param: network_name }
+        sec_group: {get_attr: [networking_infrastructure, computenode_sec_group]}
+        
+    perimeter_security:
+      type: cluster_security.yaml
+      properties:
+        headnode_public_ip: {get_attr: [headnode, public_headnode_ip]}
+        headnode_private_ip: {get_attr: [headnode, private_headnode_ip]} 
+        source_cidr: {get_param: source_network} 
+        internal_subnet_cidr: {get_param: subnet_cidr}
+        
+outputs:
+  access_ip:
+    description: IP address to access head node and submit jobs
+    value: {get_attr: [headnode, public_headnode_ip]}

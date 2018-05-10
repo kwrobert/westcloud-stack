@@ -1,0 +1,8 @@
+parameters:
+   network_name: ComputeNet2
+   subnet_cidr: 10.20.19.0/24
+   cluster_size: 4
+   source_network: 10.1.1.0/24
+   image: CentOS 7
+   external_network: ce7bedcf-4a8a-48aa-b45e-80b361547cd8 
+   keypair: general_keypair

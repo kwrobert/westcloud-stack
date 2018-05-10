@@ -1,0 +1,95 @@
+#####################################################################################################
+# Script: compute_node_cluster.yaml
+# Author: Kyle Robertson
+# Date: September 18, 2015
+# Company: Worlcom Exchange Inc.
+# Description: A HEAT template that deploys an autoscaling cluster of servers that scales up or down
+# based on CPU usage. Each server is part of a TORQUE pbs job scheduler and has all necessary services
+# to run TORQUE job scheduling pre-installed. 
+#####################################################################################################
+
+heat_template_version: 2014-10-16
+description: Homogenous compute cluster
+
+parameters:
+  cluster_size:
+    type: number
+    description: Number of servers in autoscaling cluster
+    constraints:
+      - range: {min: 2, max: 20}
+    default: 5
+  image:
+    type: string
+    label: Image name or ID
+    description: Bootable image used to boot all instances
+    default: CentOS 7
+  flavor:
+    type: string
+    label: Instance flavor
+    description: Type of flavor that defines virtual resources for instance
+    constraints:
+      - allowed_values: 
+        - m1.small
+        - m1.medium
+        - m1.large
+    default: m1.small
+  ssh_key:
+    type: string
+    label: Key name
+    description: Name for SSH keypair used to access instances
+    default: compute_host_key
+  internal_net:
+    type: string
+    label: Internal tenant network name or ID
+    description: Tenant network to attach compute nodes to
+  sec_group:
+    type: string
+    label: Compute Node Security Group
+    description: Security group for compute nodes to give them access to one another and to headnodes
+    
+resources:
+  compute_cluster:
+    type: OS::Heat::ResourceGroup
+    properties:
+      count: {get_param: cluster_size}
+      resource_def:
+        type: compute_node.yaml
+        properties:
+          name: compute_node_%index%
+          flavor: { get_param: flavor }
+          image: { get_param: image }
+          key_name: { get_param: ssh_key }
+          network: {get_param: internal_net} 
+          sec_group: {get_param: sec_group}
+          
+  high_cpu_alarm:
+    type: OS::Ceilometer::Alarm
+    properties:
+      description: Set off alarm if average CPU utilization of group > 50% for 30 seconds 
+      meter_name: cpu_util
+      statistic: avg
+      period: 30
+      evaluation_periods: 1
+      threshold: 50
+      comparison_operator: gt
+      #!!!! NEED TO MODIFY ALARM ACTIONS TO NOTIFY ADMIN WHEN CLUSTER IS PEGGED !!!!# 
+      #alarm_actions:
+      #  - {get_attr: [scale_up_policy, alarm_url]}   
+      
+  cpu_alarm_low:
+    type: OS::Ceilometer::Alarm
+    properties:
+      description: Set off alarm if the average CPU < 10% for 10 minutes
+      meter_name: cpu_util
+      statistic: avg
+      period: 600
+      evaluation_periods: 1
+      threshold: 10
+      comparison_operator: lt
+      #alarm_actions:
+      #  - {get_attr: [scale_down_policy, alarm_url]}
+      
+outputs:
+  server_ips:
+    description: List of IP addresses of the compute servers
+    value: {get_attr: [compute_cluster, outputs_list, networks, {get_param: internal_net}, 0]} 
