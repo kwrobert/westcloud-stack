@@ -29,15 +29,28 @@ parameters:
     description: Type of flavor that defines virtual resources for instance
     constraints:
       - allowed_values: 
-        - m1.small
-        - m1.medium
-        - m1.large
-    default: m1.small
+        - p4-6gb       
+        - c8-60gb-186  
+        - p8-12gb      
+        - c2-7.5gb-31  
+        - p2-3gb       
+        - c8-90gb-186  
+        - p1-1.5gb     
+        - c4-30gb-83   
+        - c1-7.5gb-30  
+        - c16-120gb-392
+        - c4-15gb-83   
+        - c2-15gb-31   
+        - c16-60gb-392 
+        - c16-90gb-392 
+        - c8-30gb-186  
+        - c4-45gb-83   
+    default: p1-1.5gb
   ssh_key:
     type: string
     label: Key name
     description: Name for SSH keypair used to access instances
-    default: compute_host_key
+    default: westcloud
   internal_net:
     type: string
     label: Internal tenant network name or ID
@@ -62,32 +75,32 @@ resources:
           network: {get_param: internal_net} 
           sec_group: {get_param: sec_group}
           
-  high_cpu_alarm:
-    type: OS::Ceilometer::Alarm
-    properties:
-      description: Set off alarm if average CPU utilization of group > 50% for 30 seconds 
-      meter_name: cpu_util
-      statistic: avg
-      period: 30
-      evaluation_periods: 1
-      threshold: 50
-      comparison_operator: gt
-      #!!!! NEED TO MODIFY ALARM ACTIONS TO NOTIFY ADMIN WHEN CLUSTER IS PEGGED !!!!# 
-      #alarm_actions:
-      #  - {get_attr: [scale_up_policy, alarm_url]}   
+  #high_cpu_alarm:
+  #  type: OS::Ceilometer::Alarm
+  #  properties:
+  #    description: Set off alarm if average CPU utilization of group > 50% for 30 seconds 
+  #    meter_name: cpu_util
+  #    statistic: avg
+  #    period: 30
+  #    evaluation_periods: 1
+  #    threshold: 50
+  #    comparison_operator: gt
+  #    #!!!! NEED TO MODIFY ALARM ACTIONS TO NOTIFY ADMIN WHEN CLUSTER IS PEGGED !!!!# 
+  #    #alarm_actions:
+  #    #  - {get_attr: [scale_up_policy, alarm_url]}   
       
-  cpu_alarm_low:
-    type: OS::Ceilometer::Alarm
-    properties:
-      description: Set off alarm if the average CPU < 10% for 10 minutes
-      meter_name: cpu_util
-      statistic: avg
-      period: 600
-      evaluation_periods: 1
-      threshold: 10
-      comparison_operator: lt
-      #alarm_actions:
-      #  - {get_attr: [scale_down_policy, alarm_url]}
+  #cpu_alarm_low:
+  #  type: OS::Ceilometer::Alarm
+  #  properties:
+  #    description: Set off alarm if the average CPU < 10% for 10 minutes
+  #    meter_name: cpu_util
+  #    statistic: avg
+  #    period: 600
+  #    evaluation_periods: 1
+  #    threshold: 10
+  #    comparison_operator: lt
+  #    #alarm_actions:
+  #    #  - {get_attr: [scale_down_policy, alarm_url]}
       
 outputs:
   server_ips:
