@@ -16,12 +16,16 @@ parameters:
       type: string
       label: External Network UUID
       description: UUID of the external network where floating IP's for environment exist
-      default: VLAN3337
     internal_network:
       type: string
       label: Interal Network UUID
       description: UUID of the internal network for the cluster
       default: igk-402_network
+    security_group:
+      type: string
+      label: Instance Security Group
+      description: Name of security group to place all instances in
+      default: default
     # Computing parameters
     cluster_size:
       type: number
@@ -34,10 +38,33 @@ parameters:
       label: Image name or ID
       description: Bootable image used to boot all instances
       default: CentOS 7
-    flavor:
+    compute_flavor:
       type: string
       label: Instance flavor
-      description: Type of flavor that defines virtual resources for instance
+      description: Type of flavor that defines virtual resources for compute nodes
+      constraints:
+        - allowed_values: 
+          - p4-6gb       
+          - c8-60gb-186  
+          - p8-12gb      
+          - c2-7.5gb-31  
+          - p2-3gb       
+          - c8-90gb-186  
+          - p1-1.5gb     
+          - c4-30gb-83   
+          - c1-7.5gb-30  
+          - c16-120gb-392
+          - c4-15gb-83   
+          - c2-15gb-31   
+          - c16-60gb-392 
+          - c16-90gb-392 
+          - c8-30gb-186  
+          - c4-45gb-83   
+      default: p1-1.5gb
+    headnode_flavor:
+      type: string
+      label: Instance flavor
+      description: Type of flavor that defines virtual resources for headnode
       constraints:
         - allowed_values: 
           - p4-6gb       
@@ -68,23 +95,22 @@ resources:
       type: headnode.yaml
       depends_on: compute_infrastructure
       properties:
-        flavor: {get_param: flavor}
+        flavor: {get_param: headnode_flavor}
         image: {get_param: image}
         key_name: {get_param: keypair}
         internal_network: {get_param: internal_network}
         external_network: {get_param: external_network}
-        sec_group: UO-Access
+        sec_group: {get_param: security_group}
             
     compute_infrastructure:
       type: compute_node_cluster.yaml
       properties:
         internal_net: {get_param: internal_network} 
-        flavor: { get_param: flavor }
+        flavor: { get_param: compute_flavor }
         image: { get_param: image }
         ssh_key: {get_param: keypair}
         cluster_size: {get_param: cluster_size}
-        # internal_net: { get_param: internal_network }
-        sec_group: UO-Access
+        sec_group: {get_param: security_group}
         
 outputs:
   access_ip:

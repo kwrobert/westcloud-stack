@@ -1,2 +1,3 @@
 admin-openrc.sh
 *.pem
+private/*

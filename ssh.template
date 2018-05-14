@@ -1,0 +1,12 @@
+Host 192.168.158.*
+  User ubuntu
+  ProxyCommand ssh -F ssh.cfg -W %h:%p westcloud
+  IdentityFile ~/.ssh/westcloud_rsa
+
+Host westcloud
+  Hostname PUBLIC_IP
+  User ubuntu
+  IdentityFile ~/.ssh/westcloud_rsa
+  ControlMaster auto
+  ControlPath ~/.ssh/ansible-%r@%h:%p
+  ControlPersist 5m
