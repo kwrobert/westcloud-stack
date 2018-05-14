@@ -43,7 +43,7 @@ resources:
       networks: [network: {get_param: internal_network}]
       security_groups: [{get_param: sec_group}]
       user_data_format: RAW
-      user_data: {get_file: headnode_config.sh}
+      user_data: {get_file: node_config.sh}
         
   #public_port:  
   #  type: OS::Neutron::Port
