@@ -1,9 +1,10 @@
 #!/usr/bin/env python
-################################################################################
+###############################################################################
 # Dynamic inventory generation for Ansible
 # Author lukas.pustina@codecentric.de
 #
-# This Python script generates a dynamic inventory based on OpenStack instances.
+# This Python script generates a dynamic inventory based on OpenStack
+# instances.
 #
 # The script is passed via -i <script name> to ansible-playbook. Ansible
 # recognizes the execute bit of the file and executes the script. It then
@@ -11,43 +12,43 @@
 # variables -- see below.
 #
 # The script iterates over all instances of the given tenant and checks if the
-# instances' metadata have set keys OS_METADATA_KEY -- see below. These keys shall
-# contain all Ansible host groups comma separated an instance shall be part of,
-# e.g., u'ansible_host_groups': u'admin_v_infrastructure,apt_repos'.
+# instances' metadata have set keys OS_METADATA_KEY -- see below. These keys
+# shall contain all Ansible host groups comma separated an instance shall be
+# part of, e.g., u'ansible_host_groups': u'admin_v_infrastructure,apt_repos'.
 # It is also possible to set Ansible host variables, e.g.,
 # u'ansible_host_vars': u'dns_server_for_domains->domain1,domain2;key2->value2'
 # Values with a comma will be transformed into a list.
 #
-# Metadata of an instance may be set during boot, e.g.,
-# > nova boot --meta <key=value>
-# , or to a running instance, e.g.,
-# nova meta <instance name> set <key=value>
+# Metadata of an instance may be set during boot, e.g., > nova boot --meta
+# <key=value> , or to a running instance, e.g., nova meta <instance name> set
+# <key=value>
 #
-# *** Requirements ***
-# * Python: novaclient module be installed which is part of the nova ubuntu
-# package.
-# * The environment variables OS_USERNAME, OS_PASSWORD, OS_TENANT_NAME,
-# OS_AUTH_URL must be set according to nova.
-#
-# *** Short comings ***
-# Currently, the name of the network is hardcoded in the global variable
-# OS_NETWORK_NAME. This might be mitigated by another environment variable, but
-# this might not interoperate well.
-#
-################################################################################
+# *** Requirements *** * Python: novaclient module be installed which is part
+# of the nova ubuntu package.  * The environment variables OS_USERNAME,
+# OS_PASSWORD, OS_TENANT_NAME, OS_AUTH_URL must be set according to nova.
+###############################################################################
 
 from __future__ import print_function
 from keystoneauth1 import session
 from keystoneauth1.identity import v2
 from novaclient import client as nclient
-import os, sys, json
+import copy
+import os
+import sys
+import yaml
+
+
+class NoAliasDumper(yaml.Dumper):
+    def ignore_aliases(self, data):
+        return True
+
 
 OS_METADATA_KEY = {
-	'host_groups': 'ansible_host_groups',
-	'host_vars': 'ansible_host_vars'
+    'host_groups': 'ansible_host_groups',
+    'host_vars': 'ansible_host_vars'
 }
+# OS_NETWORK_NAME = 'igk-402_network'
 
-OS_NETWORK_NAME = 'virtual_infrastructure_network'
 
 def getOsCredentialsFromEnvironment():
     credentials = {}
@@ -58,80 +59,96 @@ def getOsCredentialsFromEnvironment():
         credentials['TENANT_NAME'] = os.environ['OS_TENANT_NAME']
         credentials['AUTH_URL'] = os.environ['OS_AUTH_URL']
     except KeyError as e:
-        print("ERROR: environment variable %s is not defined" % e, file=sys.stderr)
+        print("ERROR: environment variable %s is not defined" % e,
+              file=sys.stderr)
         sys.exit(-1)
 
     return credentials
 
 
 def main(args):
+    if len(args) != 2:
+        raise ValueError("Must pass in name of network as argument")
+    OS_NETWORK_NAME = args[1]
     creds = getOsCredentialsFromEnvironment()
     auth = v2.Password(auth_url=creds['AUTH_URL'], username=creds['USERNAME'],
                        password=creds['PASSWORD'],
                        tenant_name=creds['TENANT_NAME'])
     sess = session.Session(auth=auth)
     nt = nclient.Client('2', session=sess)
-    
-    inventory = {}
+
+    inventory = {'all':
+                 {'hosts': {}, 'children': {}}
+                 }
     # inventory['_meta'] = { 'hostvars': {} }
-    
     for server in nt.servers.list():
-        print(server)
-        print(server.addresses)
-        # floatingIp = getFloatingIpFromServerForNetwork(server, OS_NETWORK_NAME)
-        # if floatingIp:
-        #     for group in getAnsibleHostGroupsFromServer(nt, server.id):
-        #         addServerToHostGroup(group, floatingIp, inventory)
-        #         host_vars = getAnsibleHostVarsFromServer(nt, server.id)
-        #     if host_vars:
-        #         addServerHostVarsToHostVars(host_vars, floatingIp, inventory)
-    
-    # dumpInventoryAsJson(inventory)
+        fixed_ip = get_fixed_ip(server,  OS_NETWORK_NAME)
+        host_vars = get_host_vars(server)
+        server_data = {fixed_ip: host_vars}
+        if fixed_ip not in inventory['all']['hosts']:
+            inventory['all']['hosts'].update(server_data)
+        for group in map(str, get_groups(server)):
+            if group not in inventory['all']['children']:
+                children = inventory['all']['children']
+                children[group] = {'hosts': copy.copy(server_data)}
+            else:
+                hosts = inventory['all']['children'][group]['hosts']
+                hosts.update(copy.copy(server_data))
+        # print()
+        # print(yaml.dump(inventory, Dumper=NoAliasDumper))
+        # print()
+    with open('ansible_hosts.yaml', 'w') as fout:
+        yml_txt = yaml.dump(inventory, Dumper=NoAliasDumper)
+        print(yml_txt)
+        fout.write(yml_txt)
 
-# def getAnsibleHostGroupsFromServer(novaClient, serverId):
-# 	metadata = getMetaDataFromServer(novaClient, serverId, OS_METADATA_KEY['host_groups'])
-# 	if metadata:
-# 		return metadata.split(',')
-# 	else:
-# 		return []
 
-# def getMetaDataFromServer(novaClient, serverId, key):
-# 	return novaClient.servers.get(serverId).metadata.get(key, None)
+def get_floating_ip(server, network):
+    """
+    Get floating IP of server on given network
+    """
 
-# def getAnsibleHostVarsFromServer(novaClient, serverId):
-# 	metadata = getMetaDataFromServer(novaClient, serverId, OS_METADATA_KEY['host_vars'])
-# 	if metadata:
-# 		host_vars = {}
-# 		for kv in metadata.split(';'):
-# 			key, values = kv.split('->')
-# 			values = values.split(',')
-# 			host_vars[key] = values
-# 		return host_vars
-# 	else:
-# 		return None
+    for addr in server.addresses.get(network):
+        if addr.get('OS-EXT-IPS:type') == 'floating':
+            return str(addr['addr'])
+    return None
 
-# def getFloatingIpFromServerForNetwork(server, network):
-# 	for addr in server.addresses.get(network):
-# 		if addr.get('OS-EXT-IPS:type') == 'floating':
-# 			return addr['addr']
-# 	return None
 
-# def addServerToHostGroup(group, floatingIp, inventory):
-# 	host_group = inventory.get(group, {})
-# 	hosts = host_group.get('hosts', [])
-# 	hosts.append(floatingIp)
-# 	host_group['hosts'] = hosts
-# 	inventory[group] = host_group
+def get_fixed_ip(server, network):
+    """
+    Get fixed IP of server on given network
+    """
 
-# def addServerHostVarsToHostVars(host_vars, floatingIp, inventory):
-# 	inventory_host_vars = inventory['_meta']['hostvars'].get(floatingIp, {})
-# 	inventory_host_vars.update(host_vars)
-# 	inventory['_meta']['hostvars'][floatingIp] = inventory_host_vars
+    for addr in server.addresses.get(network):
+        if addr.get('OS-EXT-IPS:type') == 'fixed':
+            return str(addr['addr'])
+    return None
 
-# def dumpInventoryAsJson(inventory):
-# 	print(json.dumps(inventory, indent=4))
 
+def get_groups(server):
+    metadata = server.metadata.get('ansible_host_groups', None)
+    if metadata:
+        return metadata.split(',')
+    else:
+        return []
+
+
+def get_host_vars(server):
+    """
+    Get the host_vars metadata from a server
+    """
+
+    metadata = server.metadata.get('ansible_host_vars', None)
+    if metadata:
+        host_vars = {}
+        for kv in metadata.split(';'):
+            key, values = kv.split('->')
+            values = values.split(',')
+            host_vars[key] = values
+        return host_vars
+    else:
+        return {}
 
 if __name__ == "__main__":
-	main(sys.argv)
+    main(sys.argv)
 
