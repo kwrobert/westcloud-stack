@@ -43,7 +43,7 @@ resources:
       networks: [network: {get_param: internal_network}]
       security_groups: [{get_param: sec_group}]
       # personality: {"/home/ubuntu/openstack.rc": {get_file: "./private/igk-402-openrc.sh"}}
-      metadata: {'ansible_host_groups': 'headnode'}
+      metadata: {'ansible_host_groups': 'login'}
       user_data_format: RAW
       user_data: {get_file: cloud-init.sh}
         

@@ -84,7 +84,8 @@ def main(args):
     for server in nt.servers.list():
         fixed_ip = get_fixed_ip(server,  OS_NETWORK_NAME)
         host_vars = get_host_vars(server)
-        server_data = {fixed_ip: host_vars}
+        host_vars.update({'ansible_host': fixed_ip})
+        server_data = {str(server.name): host_vars}
         if fixed_ip not in inventory['all']['hosts']:
             inventory['all']['hosts'].update(server_data)
         for group in map(str, get_groups(server)):
@@ -98,7 +99,8 @@ def main(args):
         # print(yaml.dump(inventory, Dumper=NoAliasDumper))
         # print()
     with open('ansible_hosts.yaml', 'w') as fout:
-        yml_txt = yaml.dump(inventory, Dumper=NoAliasDumper)
+        yml_txt = yaml.dump(inventory, Dumper=NoAliasDumper,
+                            default_flow_style=False)
         print(yml_txt)
         fout.write(yml_txt)
 

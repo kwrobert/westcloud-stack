@@ -1,6 +1,7 @@
 ---
 # This playbook deploys the whole application stack in this site.
 
+# Make nodes satisfy roles
 - name: Apply Common Configuration To All Nodes
   hosts: all
 
@@ -12,6 +13,26 @@
 
   roles:
     - optics
+
+
+# Final individual tasks
+- hosts: compute
+  tasks:
+    - name: Start dispy on compute nodes
+      async: 86400 
+      poll: 0
+      shell: '(/home/ubuntu/.local/bin/dispynode.py --clean --dest_path_prefix /mnt/data/`date -I` -d --daemon > dispynode.log 2>&1 &)'
+- hosts: login
+  tasks:
+    - name: Start dispy on login nodes
+      async: 86400 
+      poll: 0
+      shell: '(/home/ubuntu/.local/bin/dispynode.py --clean --dest_path_prefix /mnt/data/`date -I` -c 2 -d --daemon > dispynode.log 2>&1 &)'
+    - name: Upload nanowire config file
+      copy: 
+        src: ./nanowire_test.yml 
+        dest: /home/{{ ansible_ssh_user }}/tests/
+     
 
 # - name: deploy MySQL and configure the databases
 #   hosts: dbservers

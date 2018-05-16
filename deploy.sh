@@ -14,7 +14,7 @@ echo "Sourcing Openstack RC file ..."
 source "$openrc"
 # Use openstack Heat CLI to deploy cluster and wait for creation to complete
 echo "Beginning cluster creation ..."
-openstack stack create -e env.yaml -t cluster.yaml --wait $stack_name
+openstack stack create -e heat/env.yaml -t heat/cluster.yaml --wait $stack_name
 # Get public IP of the headnode
 public_ip=`openstack stack output show -f shell $stack_name access_ip | grep output_value | cut -d'=' -f 2 | tr -d '"'`
 echo "Headnode public ip: $public_ip"
@@ -31,5 +31,11 @@ while [ "$exitcode" != "0" ]; do
     sleep 5
 done
 echo "Host $public_ip up!"
-internal_net=`grep 'internal_network' env.yaml  | cut -d":" -f2 | tr -d "[:space:]"`
+internal_net=`grep 'internal_network' heat/env.yaml  | cut -d":" -f2 | tr -d "[:space:]"`
 python openstack_inventory.py "$internal_net"
+echo "Waiting for cloud init scripts to finish ..."
+while [ -z "$(openstack console log show --lines 20 headnode | grep 'Cloud-init v.\+ finished')" ]; do
+    sleep 5
+done
+echo "Cloud init complete! Running ansible playbooks ..."
+ansible-playbook ./ansible/site.yml 

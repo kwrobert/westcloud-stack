@@ -5,7 +5,9 @@ General:
     base_name: 'field_data'
     postprocess: False
     post_parallel: True
-    execution: 'serial'
+    execution: 'dispy'
+    ip_addr: 
+    nodes: 192.168.158.*
     adaptive_convergence: False
     max_iter: 4 
     max_diff: .02

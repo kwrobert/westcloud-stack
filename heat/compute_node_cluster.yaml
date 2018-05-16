@@ -68,7 +68,7 @@ resources:
       resource_def:
         type: compute_node.yaml
         properties:
-          name: compute_node_%index%
+          name: compute%index%
           flavor: { get_param: flavor }
           image: { get_param: image }
           key_name: { get_param: ssh_key }
