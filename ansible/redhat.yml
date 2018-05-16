@@ -1,0 +1,6 @@
+---
+- name: Update and upgrade packages
+  yum:
+      name: '*'
+      state: latest
+      update_only: yes

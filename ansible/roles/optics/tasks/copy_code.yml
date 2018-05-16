@@ -1,0 +1,27 @@
+---
+# These tasks are responsible for copying the latest dev/production code from
+# the version control system.
+
+- name: Clone nanowire code repo
+  git: 
+    repo: "{{ nanowire_repo }}"
+    dest: "{{ nanowire_path }}"
+    recursive: yes
+    version: develop
+    force: yes
+
+# Currently a bug in ansible where chdir does not work without virtualenv
+# stuff. Open pull request here: https://github.com/ansible/ansible/pull/40129
+# Shell command workaround below
+# - name: Install nanowire code
+#   pip:
+#       executable: pip3
+#       chdir: {{ nanowire_path }}
+#       requirements: requirements.txt
+#       state: latest
+
+- name: Install nanowire code
+  command: pip3 install -r requirements.txt
+  args:
+    chdir: "{{ nanowire_path }}"
+    # creates: /home/ubuntu/.local/lib/python3.5/site-packages/nanowire.egg-link

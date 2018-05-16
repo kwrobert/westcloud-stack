@@ -1,0 +1,21 @@
+---
+# This playbook deploys the whole application stack in this site.
+
+- name: Apply Common Configuration To All Nodes
+  hosts: all
+
+  roles:
+    - common
+
+- name: Deploy Optics Code
+  hosts: all
+
+  roles:
+    - optics
+
+# - name: deploy MySQL and configure the databases
+#   hosts: dbservers
+#   remote_user: root
+
+#   roles:
+#     - db

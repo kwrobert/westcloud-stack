@@ -1,0 +1,50 @@
+#####################################################################################################
+# Script: compute_node.yaml
+# Author: Kyle Robertson
+# Date: September 18, 2015
+# Company: Worlcom Exchange Inc.
+# Description: A HEAT template that deploys the compute nodes in the TORQUE PBS job schedular architecture. 
+# This node runs the pbs_mom service and all the users jobs   
+#####################################################################################################
+
+
+heat_template_version: 2014-10-16
+description: Homogenous compute cluster 
+parameters:
+  image:
+    type: string
+    description: Image used for servers
+  key_name:
+    type: string
+    description: SSH key to connect to the servers
+  flavor:
+    type: string
+    description: flavor used by the servers
+  network:
+    type: string
+    description: Network used by the server
+  sec_group:
+    type: string
+    description: Security group for headnodes
+  name: 
+    type: string
+    description: Name of the instance. Provided by compute_node_cluster.yaml
+
+resources:
+  server:
+    type: OS::Nova::Server
+    properties:
+      name: {get_param: name}
+      flavor: {get_param: flavor}
+      image: {get_param: image}
+      key_name: {get_param: key_name}
+      networks: [network: {get_param: network}]
+      security_groups: [{get_param: sec_group}]
+      metadata: {'ansible_host_groups': 'compute'}
+      user_data_format: RAW
+      user_data: {get_file: cloud-init.sh}
+
+outputs:
+  server_ip:
+    description: IP Address of the load-balanced server.
+    value: { get_attr: [server, first_address] }

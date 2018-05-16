@@ -20,4 +20,5 @@ echo "Installing nanowire code dependencies ..."
 pip3 install -r requirements.txt
 echo "Making data dir"
 mkdir /mnt/data
-chown -R ubuntu:ubuntu: /mnt/data
+chown -R ubuntu:ubuntu /mnt/data
+chown -R ubuntu:ubuntu /home/ubuntu/

@@ -1,0 +1,5 @@
+---
+# Variables listed here are applicable to all host groups
+ansible_ssh_user: ubuntu
+nanowire_path: /home/{{ ansible_ssh_user }}/software/nanowire
+nanowire_repo:  https://github.com/kwrobert/nanowire.git
