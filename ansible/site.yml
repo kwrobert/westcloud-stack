@@ -1,42 +1,56 @@
 ---
 # This playbook deploys the whole application stack in this site.
 
+# We need to modify the MaxStartups and MaxSessions entries in the sshd_config
+# file of the headnode before gathering facts and running the bulk of the
+# playbook. This is because the ssh server randomly drops connections with a
+# default rate of 30% after more then 10 unauthenticated connections have been
+# made
+- name: Modify sshd_config on headnode
+  gather_facts: no
+  hosts: login
+  tasks:
+    - name: Modify MaxStartups
+      become: yes
+      become_method: sudo
+      lineinfile:
+        dest: /etc/ssh/sshd_config
+        regexp: '^MaxStartups'
+        line: 'MaxStartups 30:30:60'
+        state: present
+
+    - name: Modify MaxSessions
+      become: yes
+      become_method: sudo
+      lineinfile:
+        dest: /etc/ssh/sshd_config
+        regexp: '^MaxSessions'
+        line: 'MaxSessions 30'
+        state: present
+
+    - name: Restart ssh server on headnode
+      become: yes
+      become_method: sudo
+      service:
+        name: ssh
+        state: restarted
+
 # Make nodes satisfy roles
 - name: Apply Common Configuration To All Nodes
   hosts: all
-
   roles:
-    - common
+    - role: common
+      tags: ['common']
+
+- name: Setup Head Node
+  hosts: login
+  roles:
+    - role: login
+      tags: ['login']
 
 - name: Deploy Optics Code
   hosts: all
-
   roles:
-    - optics
+    - role: optics
+      tags: ['optics']
 
-
-# Final individual tasks
-- hosts: compute
-  tasks:
-    - name: Start dispy on compute nodes
-      async: 86400 
-      poll: 0
-      shell: '(/home/ubuntu/.local/bin/dispynode.py --clean --dest_path_prefix /mnt/data/`date -I` -d --daemon > dispynode.log 2>&1 &)'
-- hosts: login
-  tasks:
-    - name: Start dispy on login nodes
-      async: 86400 
-      poll: 0
-      shell: '(/home/ubuntu/.local/bin/dispynode.py --clean --dest_path_prefix /mnt/data/`date -I` -c 2 -d --daemon > dispynode.log 2>&1 &)'
-    - name: Upload nanowire config file
-      copy: 
-        src: ./nanowire_test.yml 
-        dest: /home/{{ ansible_ssh_user }}/tests/
-     
-
-# - name: deploy MySQL and configure the databases
-#   hosts: dbservers
-#   remote_user: root
-
-#   roles:
-#     - db

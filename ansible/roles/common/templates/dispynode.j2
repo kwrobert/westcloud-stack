@@ -1,0 +1,38 @@
+[DEFAULT]
+# Path to save output files to
+dest_path_prefix = /mnt/dispy/
+# Delete all files in dest_path_prefix whenever the node starts
+clean = True
+# No limit on size of files transferred 
+max_file_size = 0
+# Do not allow clients to shutdown this server
+client_shutdown = False
+# Port for communication between nodes and clients
+node_port = 51348
+secret = 
+# Leave empty, defaults to hostname of server
+name = 
+service_stop = 
+keyfile = 
+ip_addrs = []
+# Port for communication between nodes and scheduler
+scheduler_port = 51347
+scheduler_node = 
+# No limit on the number of clients to serve
+serve = -1
+{% if 'login' in group_names %}
+cpus = -2
+{% else %}
+cpus = 0
+{% endif %}
+ext_ip_addrs = []
+zombie_interval = 60.0
+ipv4_udp_multicast = False
+ping_interval = 0
+service_end = 
+service_start = 
+certfile = 
+daemon = True
+loglevel = True
+# Timeout value in seconds for socket I/O operations
+msg_timeout = 30

@@ -7,7 +7,7 @@
     repo: "{{ nanowire_repo }}"
     dest: "{{ nanowire_path }}"
     recursive: yes
-    version: develop
+    version: preprocess
     force: yes
 
 # Currently a bug in ansible where chdir does not work without virtualenv

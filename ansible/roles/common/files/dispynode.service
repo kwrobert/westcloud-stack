@@ -1,0 +1,14 @@
+[Unit]
+
+Description=Dispynode Job Server Daemon
+After=multi-user.target
+
+[Service]
+
+Type=simple
+ExecStart=/usr/local/bin/dispynode.py --config /etc/dispynode.conf
+ExecReload=/bin/kill -s INT $MAINPID; /usr/local/bin/dispynode.py --config /etc/dispynode.conf
+# Send KillSignal to parent but not children
+KillMode=process
+KillSignal=SIGINT
+TimeoutStopSec=300

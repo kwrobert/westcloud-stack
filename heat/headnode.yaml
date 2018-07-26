@@ -46,6 +46,20 @@ resources:
       metadata: {'ansible_host_groups': 'login'}
       user_data_format: RAW
       user_data: {get_file: cloud-init.sh}
+
+  data_volume:
+    type: OS::Cinder::Volume
+    properties:
+      description: Data volume for the head node
+      name: HeadnodeDataVolume
+      size: 450
+
+  volume_attachment:
+    type: OS::Cinder::VolumeAttachment
+    properties:
+      instance_uuid: {get_resource: server}
+      volume_id: {get_resource: data_volume}
+      mountpoint: /dev/vdc
         
   #public_port:  
   #  type: OS::Neutron::Port

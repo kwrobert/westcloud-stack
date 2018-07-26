@@ -1,0 +1,5 @@
+---
+# The variables file used by the playbooks in the optics role.
+# These don't have to be explicitly imported by vars_files: they are autopopulated.
+nanowire_path: /home/{{ ansible_ssh_user }}/software/nanowire
+nanowire_repo:  https://github.com/kwrobert/nanowire.git

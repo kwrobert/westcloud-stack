@@ -6,8 +6,7 @@
   become_method: sudo
   apt:
     update_cache: yes
-    # upgrade: yes
-    name: "*"
+    # upgrade: yes name: "*"
     state: latest
     force_apt_get: yes
 
@@ -24,14 +23,28 @@
       - libsuitesparse-dev
       - libfftw3-dev
       - libopenblas-dev
+      - libssl-dev
+      - libffi-dev
+      - build-essential
     state: latest
     force_apt_get: yes
+
+# Become root so packages get installed system-wide
+- name: Install global Python packages
+  become: yes
+  become_method: sudo
+  pip:
+    # Done this way so Ansible doesn't make a separate SSH connection for each
+    # package, but instead installs them all with a single call to pip
+    name: "{{ python_global_packages | join(' ') }}"
+    executable: /usr/bin/pip3
+    state: latest
 
 - name: Update /etc/hosts
   lineinfile:
     dest: /etc/hosts
-    regexp: '{{ hostvars[item].ansible_default_ipv4.address }}.*{{ item }}$'
-    line: "{{ hostvars[item].ansible_default_ipv4.address }} {{item}}"
+    regexp: "{{ hostvars[item]['ansible_default_ipv4']['address'] }}.*{{ item }}$"
+    line: "{{ hostvars[item]['ansible_default_ipv4']['address'] }} {{item}}"
     state: present
   become: yes
   become_method: sudo
@@ -46,3 +59,31 @@
     owner: ubuntu
     group: ubuntu
     recurse: yes
+
+- name: Upload dispy service file
+  become: yes
+  become_method: sudo
+  copy:
+    src: ../files/dispynode.service  
+    dest: /etc/systemd/system/
+    owner: root
+    group: root
+
+- name: Upload template dispynode config file
+  become: yes
+  become_method: sudo
+  template:
+    src: dispynode.j2
+    dest: /etc/dispynode.conf
+    owner: root
+    group: root
+
+# Start the dispy systemd service on all nodes
+- name: Start dispy service
+  become: yes
+  become_method: sudo
+  systemd:  
+    name: dispynode.service
+    daemon_reload: yes
+    state: started
+    enabled: yes

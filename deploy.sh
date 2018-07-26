@@ -34,7 +34,7 @@ echo "Host $public_ip up!"
 internal_net=`grep 'internal_network' heat/env.yaml  | cut -d":" -f2 | tr -d "[:space:]"`
 python openstack_inventory.py "$internal_net"
 echo "Waiting for cloud init scripts to finish ..."
-while [ -z "$(openstack console log show --lines 20 headnode | grep 'Cloud-init v.\+ finished')" ]; do
+while [ -z "$(openstack console log show --lines 75 headnode | grep 'Cloud-init v.\+ finished')" ]; do
     sleep 5
 done
 echo "Cloud init complete! Running ansible playbooks ..."
