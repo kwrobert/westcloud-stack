@@ -95,9 +95,9 @@ def main(args):
             else:
                 hosts = inventory['all']['children'][group]['hosts']
                 hosts.update(copy.copy(server_data))
-        # print()
-        # print(yaml.dump(inventory, Dumper=NoAliasDumper))
-        # print()
+    # print()
+    # print(yaml.dump(inventory, Dumper=NoAliasDumper))
+    # print()
     with open('ansible_hosts.yaml', 'w') as fout:
         yml_txt = yaml.dump(inventory, Dumper=NoAliasDumper,
                             default_flow_style=False)
