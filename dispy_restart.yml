@@ -1,0 +1,14 @@
+---
+- hosts: all
+  become: yes
+  become_method: sudo
+  tasks:
+    - name: Start dispy service
+      tags: ['dispy']
+      become: yes
+      become_method: sudo
+      systemd:  
+        name: dispynode.service
+        daemon_reload: yes
+        state: restarted
+        enabled: yes

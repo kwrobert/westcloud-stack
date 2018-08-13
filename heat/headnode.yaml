@@ -52,7 +52,7 @@ resources:
     properties:
       description: Data volume for the head node
       name: HeadnodeDataVolume
-      size: 450
+      size: 475
 
   volume_attachment:
     type: OS::Cinder::VolumeAttachment

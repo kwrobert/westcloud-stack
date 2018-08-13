@@ -33,3 +33,13 @@
     owner: ubuntu
     group: ubuntu
     recurse: yes
+
+- name: Install additional packages on login node
+  become: yes
+  become_method: sudo
+  apt:
+    name:
+      - yadm
+      - vim
+    state: latest
+    force_apt_get: yes

@@ -2,5 +2,5 @@
 # All hosts in the inventory have access to these variables
 ansible_ssh_user: ubuntu
 python_global_packages:
-  - dispy
+  - dispy==4.8.6
   - psutil

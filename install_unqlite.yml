@@ -1,0 +1,13 @@
+---
+- hosts: all
+  # become: yes
+  # become_method: sudo
+  tasks:
+    # Install everything globally so systemd can use the dispynode server
+    - name: Install unqlite
+      become: yes
+      become_method: sudo
+      pip: 
+        name: unqlite
+        executable: pip3
+        state: latest

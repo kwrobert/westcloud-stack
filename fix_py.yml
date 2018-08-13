@@ -1,0 +1,13 @@
+---
+- hosts: all
+  # become: yes
+  # become_method: sudo
+  tasks:
+    # Install everything globally so systemd can use the dispynode server
+    - name: Uninstall nanowire code
+      become: yes
+      become_method: sudo
+      command: pip3 uninstall -r requirements.txt
+      args:
+        chdir: "/home/ubuntu/software/nanowire"
+

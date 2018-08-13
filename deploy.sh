@@ -37,5 +37,13 @@ echo "Waiting for cloud init scripts to finish ..."
 while [ -z "$(openstack console log show --lines 75 headnode | grep 'Cloud-init v.\+ finished')" ]; do
     sleep 5
 done
-echo "Cloud init complete! Running ansible playbooks ..."
+echo "Headnode cloud init complete! Checking compute nodes ..."
+for host in $(grep 'compute[0-9]\+' ansible_hosts.yaml | tr -d ': ' | sort | uniq); do
+    echo "Checking host $host"
+    while [ -z "$(openstack console log show --lines 75 $host | grep 'Cloud-init v.\+ finished')" ]; do
+        sleep 5
+    done
+    echo "Cloud init on host $host complete!"
+done
+echo "All cloud inits complete! Running ansible playbooks ..."
 ansible-playbook ./ansible/site.yml 
