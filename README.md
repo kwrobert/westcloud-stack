@@ -4,6 +4,12 @@ This is a collection of heat templates, scripts, and Ansible playbooks to deploy
 
 ## Useful Commands
 
+### Install all the openstack commands
+
+```
+pipx install --include-deps openstackclient
+```
+
 ### Get list of available compute flavors
 
 ```
@@ -27,4 +33,24 @@ c16-60gb-392
 
 ```
 openstack image list -f json | jq -r '.[].Name'
+```
+
+### Scale up/down autoscaling group
+
+Get resources in parent stack:
+
+```
+openstack stack resource list <parent stack name> -n 5
+```
+
+Find the child stack containing the scaling policies in the above list. Then scale up:
+
+```
+openstack stack resource signal <stack name> compute_cluster_scaleup_policy
+```
+
+Scale down:
+
+```
+openstack stack resource signal <stack name> compute_cluster_scaledown_policy
 ```
