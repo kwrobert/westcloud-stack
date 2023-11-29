@@ -2,22 +2,27 @@
 # Script: compute_node_cluster.yaml
 # Author: Kyle Robertson
 # Date: September 18, 2015
-# Company: Worlcom Exchange Inc.
 # Description: A HEAT template that deploys an autoscaling cluster of servers that scales up or down
 # based on CPU usage. Each server is part of a TORQUE pbs job scheduler and has all necessary services
 # to run TORQUE job scheduling pre-installed. 
 #####################################################################################################
 
-heat_template_version: 2014-10-16
+heat_template_version: 2018-08-31
 description: Homogenous compute cluster
 
 parameters:
-  cluster_size:
+  max_cluster_size:
     type: number
-    description: Number of servers in autoscaling cluster
+    description: Maximum number of servers in autoscaling cluster
     constraints:
-      - range: {min: 2, max: 20}
-    default: 5
+      - range: {min: 1, max: 8}
+    default: 8
+  min_cluster_size:
+    type: number
+    description: Minimum number of servers in autoscaling cluster
+    constraints:
+      - range: {min: 1, max: 2}
+    default: 2
   image:
     type: string
     label: Image name or ID
@@ -62,45 +67,64 @@ parameters:
     
 resources:
   compute_cluster:
-    type: OS::Heat::ResourceGroup
+    type: OS::Heat::AutoScalingGroup
     properties:
-      count: {get_param: cluster_size}
-      resource_def:
+      max_size: {get_param: max_cluster_size}
+      desired_capacity: 2
+      min_size: {get_param: min_cluster_size} 
+      resource:
         type: compute_node.yaml
         properties:
-          name: compute%index%
           flavor: { get_param: flavor }
           image: { get_param: image }
           key_name: { get_param: ssh_key }
           network: {get_param: internal_net} 
+          metadata: {"metering.stack": {get_param: "OS::stack_id"}}
           sec_group: {get_param: sec_group}
           
-  #high_cpu_alarm:
-  #  type: OS::Ceilometer::Alarm
-  #  properties:
-  #    description: Set off alarm if average CPU utilization of group > 50% for 30 seconds 
-  #    meter_name: cpu_util
-  #    statistic: avg
-  #    period: 30
-  #    evaluation_periods: 1
-  #    threshold: 50
-  #    comparison_operator: gt
-  #    #!!!! NEED TO MODIFY ALARM ACTIONS TO NOTIFY ADMIN WHEN CLUSTER IS PEGGED !!!!# 
-  #    #alarm_actions:
-  #    #  - {get_attr: [scale_up_policy, alarm_url]}   
-      
-  #cpu_alarm_low:
-  #  type: OS::Ceilometer::Alarm
-  #  properties:
-  #    description: Set off alarm if the average CPU < 10% for 10 minutes
-  #    meter_name: cpu_util
-  #    statistic: avg
-  #    period: 600
-  #    evaluation_periods: 1
-  #    threshold: 10
-  #    comparison_operator: lt
-  #    #alarm_actions:
-  #    #  - {get_attr: [scale_down_policy, alarm_url]}
+  compute_cluster_scaleup_policy:
+    type: OS::Heat::ScalingPolicy
+    properties:
+      adjustment_type: change_in_capacity
+      auto_scaling_group_id: {get_resource: compute_cluster}
+      cooldown: 60
+      scaling_adjustment: 1
+
+  compute_cluster_scaledown_policy:
+    type: OS::Heat::ScalingPolicy
+    properties:
+      adjustment_type: change_in_capacity
+      auto_scaling_group_id: {get_resource: compute_cluster}
+      cooldown: 60
+      scaling_adjustment: -1
+
+  # cpu_alarm_high:
+  #   type: OS::Ceilometer::Alarm
+  #   properties:
+  #     description: Scale-up if the average CPU > 80% for 1 minute
+  #     meter_name: cpu_util
+  #     statistic: avg
+  #     period: 60
+  #     evaluation_periods: 1
+  #     threshold: 80
+  #     alarm_actions:
+  #       - {get_attr: [compute_cluster_scaleup_policy, alarm_url]}
+  #     matching_metadata: {'metadata.user_metadata.stack': {get_param: "OS::stack_id"}}
+  #     comparison_operator: gt
+
+  # cpu_alarm_low:
+  #   type: OS::Ceilometer::Alarm
+  #   properties:
+  #     description: Scale-down if the average CPU < 20% for 60 minutes
+  #     meter_name: cpu_util
+  #     statistic: avg
+  #     period: 60
+  #     evaluation_periods: 1
+  #     threshold: 20
+  #     alarm_actions:
+  #       - {get_attr: [compute_cluster_scaledown_policy, alarm_url]}
+  #     matching_metadata: {'metadata.user_metadata.stack': {get_param: "OS::stack_id"}}
+  #     comparison_operator: lt
       
 outputs:
   server_ips:

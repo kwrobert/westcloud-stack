@@ -6,7 +6,7 @@
 # Description: A HEAT template that deploys the proper security policies for the compute cluster
 #####################################################################################################
 
-heat_template_version: 2014-10-16
+heat_template_version: 2018-08-31
 description: Homogenous compute cluster
 
 parameters:
