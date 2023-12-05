@@ -1,14 +1,14 @@
-Host 192.168.158.*
+Host {{ internal_subnet_network_address }}.*
   User ubuntu
   StrictHostKeyChecking no
-  ProxyCommand ssh -F ssh.cfg -W %h:%p westcloud
-  IdentityFile ~/.ssh/westcloud_rsa
+  ProxyCommand ssh -F files/ssh.cfg -W %h:%p westcloud
+  IdentityFile ~/.ssh/westcloud.pem
 
-Host westcloud
-  Hostname PUBLIC_IP
+Host headnode {{ login_node_public_ip }}
+  Hostname {{ login_node_public_ip }}
   StrictHostKeyChecking no
   User ubuntu
-  IdentityFile ~/.ssh/westcloud_rsa
+  IdentityFile ~/.ssh/westcloud.pem
   ControlMaster auto
   ControlPath ~/.ssh/ansible-%r@%h:%p
   ControlPersist 5m

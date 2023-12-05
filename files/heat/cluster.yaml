@@ -155,6 +155,6 @@ outputs:
   scale_down_signal_url:
       value: {get_attr: [compute_infrastructure, scale_down_signal_url]}
   scale_up_info:
-      value: {get_attr: [compute_infrastructure, scale_up_infolkjkk
+      value: {get_attr: [compute_infrastructure, scale_up_info]}
   scale_down_info:
       value: {get_attr: [compute_infrastructure, scale_down_info]}

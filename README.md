@@ -2,6 +2,13 @@
 
 This is a collection of heat templates, scripts, and Ansible playbooks to deploy a Dask cluster on the Arbutus Openstack environment.
 
+## Prerequisites
+
+
+- Install Ansible and extra dependencies: `pipx install ansible --include-deps && pipx inject ansible openstacksdk`
+- Install openstack Ansible collection: `ansible-galaxy collection install openstack.cloud`
+- Install openstack client: `pipx install --include-deps openstackclient`
+
 ## Useful Commands
 
 ### Install all the openstack commands

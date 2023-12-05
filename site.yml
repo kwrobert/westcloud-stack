@@ -2,14 +2,50 @@
 # This playbook deploys the whole application stack in this site.
 - name: Deploy Dask cluster Heat stack
   hosts: localhost
+  connection: local
+  tags: 
+    - deploy_stack
   tasks: 
-  - name: create stack
-    openstack.cloud.stack:
-      name: "def-jkrich-dask-cluster-stack"
-      state: present
-      template: "heat/cluster.yaml"
-      environment:
-      - heat/env.yaml
+    - name: Create stack
+      openstack.cloud.stack:
+        cloud: def-jkrich-arbutus
+        name: "def-jkrich-dask-cluster-stack"
+        state: present
+        template: "files/heat/cluster.yaml"
+        environment:
+        - files/heat/env.yaml
+      register: stack_outputs
+
+    - name: Print stack outputs
+      debug:
+        var: stack_outputs
+
+    - name: Print internal subnet network address
+      debug:
+        msg: "{{ (stack_outputs['stack']['parameters']['internal_network_cidr'] | split('.'))[0:3] | join('.') }}.*"
+
+    - name: Print login node public ip
+      debug:
+        msg: "{{ stack_outputs['stack']['outputs'] | items2dict(key_name='output_key', value_name='output_value') }}"
+
+    - name: Refresh inventory to get deployed hosts
+      meta: refresh_inventory
+
+    - name: Write local ssh.cfg file
+      vars:
+        internal_subnet_network_address: "{{ (stack_outputs['stack']['parameters']['internal_network_cidr'] | split('.'))[0:3] | join('.') }}" 
+        login_node_public_ip: "{{ (stack_outputs['stack']['outputs'] | items2dict(key_name='output_key', value_name='output_value'))['access_ip'] }}"
+      template:
+        src: ssh_cfg.j2
+        dest: files/ssh.cfg  
+
+    # For some reason we 
+    - name: Reboot headnode
+      openstack.cloud.server_action:
+        cloud: def-jkrich-arbutus
+        action: reboot_hard
+        server: headnode
+        timeout: 200
 
 # We need to modify the MaxStartups and MaxSessions entries in the sshd_config
 # file of the headnode before gathering facts and running the bulk of the
@@ -18,8 +54,17 @@
 # made
 - name: Modify sshd_config on headnode
   gather_facts: no
-  hosts: login
+  hosts: headnode
+  tags: ['login']
+  pre_tasks:
+    - name: Wait for headnode to be reachable
+      ansible.builtin.wait_for_connection:
+        timeout: 600
   tasks:
+    - name: Check login node
+      debug:
+        msg: "Login node is up!"
+
     - name: Modify MaxStartups
       become: yes
       become_method: sudo
