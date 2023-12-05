@@ -1,5 +1,15 @@
 ---
 # This playbook deploys the whole application stack in this site.
+- name: Deploy Dask cluster Heat stack
+  hosts: localhost
+  tasks: 
+  - name: create stack
+    openstack.cloud.stack:
+      name: "def-jkrich-dask-cluster-stack"
+      state: present
+      template: "heat/cluster.yaml"
+      environment:
+      - heat/env.yaml
 
 # We need to modify the MaxStartups and MaxSessions entries in the sshd_config
 # file of the headnode before gathering facts and running the bulk of the

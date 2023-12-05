@@ -130,3 +130,15 @@ outputs:
   server_ips:
     description: List of IP addresses of the compute servers
     value: {get_attr: [compute_cluster, outputs_list, networks, {get_param: internal_net}, 0]} 
+  scale_up_url:
+    value: {get_attr: [compute_cluster_scaleup_policy, alarm_url]}
+  scale_down_url:
+    value: {get_attr: [compute_cluster_scaledown_policy, alarm_url]}
+  scale_up_signal_url:
+    value: {get_attr: [compute_cluster_scaleup_policy, signal_url]}
+  scale_down_signal_url:
+    value: {get_attr: [compute_cluster_scaledown_policy, signal_url]}
+  scale_up_info:
+    value: {get_attr: [compute_cluster_scaleup_policy, show]}
+  scale_down_info:
+    value: {get_attr: [compute_cluster_scaledown_policy, show]}

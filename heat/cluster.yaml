@@ -146,3 +146,15 @@ outputs:
   access_ip:
     description: IP address to access head node and submit jobs
     value: {get_attr: [headnode, public_headnode_ip]}
+  scale_up_url:
+      value: {get_attr: [compute_infrastructure, scale_up_url]}
+  scale_down_url:
+      value: {get_attr: [compute_infrastructure, scale_down_url]}
+  scale_up_signal_url:
+      value: {get_attr: [compute_infrastructure, scale_up_signal_url]}
+  scale_down_signal_url:
+      value: {get_attr: [compute_infrastructure, scale_down_signal_url]}
+  scale_up_info:
+      value: {get_attr: [compute_infrastructure, scale_up_infolkjkk
+  scale_down_info:
+      value: {get_attr: [compute_infrastructure, scale_down_info]}
