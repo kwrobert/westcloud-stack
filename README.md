@@ -16,7 +16,7 @@ Do all this from the root of the repo to set up your machine for running all the
 
 ### Configuring Openstack
 
-You'll need to configure your Openstack environment to allow the creation of autoscaling groups. This is done by adding the following to your `~/.config/openstack/clouds.yaml` file:
+You'll need to configure your local Openstack tools with credentials in order to deploy the Openstack Heat "stack" (domain-specific lingo there) that provisions the infrastructure for the cluster. This is done by adding the following to your `~/.config/openstack/clouds.yaml` file:
 
 ```
 # This is a clouds.yaml file, which can be used by OpenStack tools as a source
