@@ -8,42 +8,24 @@
     update_cache: yes
     upgrade: yes
 
-- name: Install packages
+- name: Install apt packages
   become: yes
   become_method: sudo
-  apt:
-    name:
-      - python-pip
-      - python-dev
-      - python-tk
-      - python3
-      - python3-pip
-      - python3-dev
-      - python3-tk
-      - libsuitesparse-dev
-      - libfftw3-dev
-      - libopenblas-dev
-      - libssl-dev
-      - libffi-dev
-      - build-essential
-      - zsh
-      - htop
+  ansible.builtin.apt:
+    name: "{{ apt_packages }}"
     state: latest
-    force_apt_get: yes
 
 # Become root so packages get installed system-wide
-# - name: Install global Python packages
-#   become: yes
-#   become_method: sudo
-#   pip:
-#     # Done this way so Ansible doesn't make a separate SSH connection for each
-#     # package, but instead installs them all with a single call to pip
-#     name: "{{ python_global_packages | join(' ') }}"
-#     executable: /usr/bin/pip3
-#     state: latest
+- name: Install global Python packages
+  # become: yes
+  # become_method: sudo
+  ansible.builtin.pip:
+    name: "{{ global_pip_packages }}"
+    executable: /usr/bin/pip3
+    state: latest
 
 - name: Update /etc/hosts
-  lineinfile:
+  ansible.builtin.lineinfile:
     dest: /etc/hosts
     # regexp: "{{ hostvars[item]['ansible_default_ipv4']['address'] }}.*{{ item }}$"
     # line: "{{ hostvars[item]['ansible_default_ipv4']['address'] }} {{item}}"
@@ -57,40 +39,103 @@
 - name: Create /mnt/data directory
   become: yes
   become_method: sudo
-  file: 
+  ansible.builtin.file:
     path: /mnt/data
     state: directory
     owner: ubuntu
     group: ubuntu
     recurse: yes
 
-- name: Upload dispy service file
-  tags: ['dispy']
+- name: Create Ceph config directory
   become: yes
   become_method: sudo
-  copy:
-    src: ../files/dispynode.service  
-    dest: /etc/systemd/system/
+  tags: ["ceph"]
+  ansible.builtin.file:
+    path: "{{ ceph_config_directory }}"
+    state: directory
+    owner: root
+    group: root
+    recurse: yes
+
+- name: Create Ceph share mountpoint at {{ ceph_share_mountpoint }}
+  become: yes
+  become_method: sudo
+  tags: ["ceph"]
+  ansible.builtin.file:
+    path: "{{ ceph_share_mountpoint }}"
+    state: directory
+    owner: ubuntu
+    group: ubuntu
+    recurse: yes
+
+- name: Create Ceph share key config file
+  become: yes
+  become_method: sudo
+  tags: ["ceph"]
+  ansible.builtin.template:
+    src: ceph_fullkey_config.j2
+    dest: "{{ ceph_config_directory }}/client.fullkey.{{ ceph_share_user }}"
     owner: root
     group: root
 
-- name: Upload template dispynode config file
-  tags: ['dispy']
+- name: Create Ceph share key file
   become: yes
   become_method: sudo
-  template:
-    src: dispynode.j2
-    dest: /etc/dispynode.conf
+  tags: ["ceph"]
+  ansible.builtin.template:
+    src: ceph_keyonly_config.j2
+    dest: "{{ ceph_config_directory }}/client.keyonly.{{ ceph_share_user }}"
     owner: root
     group: root
 
-# Start the dispy systemd service on all nodes
-- name: Start dispy service
-  tags: ['dispy']
+- name: Create Ceph config file
   become: yes
   become_method: sudo
-  systemd:  
-    name: dispynode.service
-    daemon_reload: yes
-    state: restarted
-    enabled: yes
+  tags: ["ceph"]
+  ansible.builtin.template:
+    src: ceph.conf.j2
+    dest: "{{ ceph_config_directory }}/ceph.conf"
+    owner: root
+    group: root
+
+- name: Configure persistent Ceph mount
+  become: yes
+  become_method: sudo
+  tags: ["ceph"]
+  ansible.posix.mount:
+    state: mounted
+    fstype: ceph
+    src: "{{ ceph_share_user }}@.{{ ceph_share_fs_name }}={{ ceph_share_subdirectory }}"
+    path: "{{ ceph_share_mountpoint }}"
+    opts: "secretfile={{ ceph_config_directory }}/client.keyonly.{{ ceph_share_user }}"
+
+# - name: Upload dispy service file
+#   tags: ['dispy']
+#   become: yes
+#   become_method: sudo
+#   ansible.builtin.copy:
+#     src: ../files/dispynode.service
+#     dest: /etc/systemd/system/
+#     owner: root
+#     group: root
+
+# - name: Upload template dispynode config file
+#   tags: ['dispy']
+#   become: yes
+#   become_method: sudo
+#   ansible.builtin.template:
+#     src: dispynode.j2
+#     dest: /etc/dispynode.conf
+#     owner: root
+#     group: root
+
+# # Start the dispy systemd service on all nodes
+# - name: Start dispy service
+#   tags: ['dispy']
+#   become: yes
+#   become_method: sudo
+#   ansible.builtin.systemd:
+#     name: dispynode.service
+#     daemon_reload: yes
+#     state: restarted
+#     enabled: no

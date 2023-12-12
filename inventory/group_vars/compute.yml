@@ -1,0 +1,8 @@
+global_pip_packages:
+  - dask[complete]
+  - suffix_trees 
+  - mpl_render
+  - generic_escape
+  - simudo
+  - dispy
+  - psutil

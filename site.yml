@@ -97,15 +97,15 @@
     - role: common
       tags: ['common']
 
-- name: Setup Head Node
-  hosts: login
-  roles:
-    - role: login
-      tags: ['login']
+# - name: Setup Head Node
+#   hosts: login
+#   roles:
+#     - role: login
+#       tags: ['login']
 
-- name: Deploy Optics Code
-  hosts: all
-  roles:
-    - role: optics
-      tags: ['optics']
+# - name: Deploy Optics Code
+#   hosts: all
+#   roles:
+#     - role: optics
+#       tags: ['optics']
 

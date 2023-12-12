@@ -7,3 +7,7 @@ fail_on_errors: true
 only_clouds:
   - "def-jkrich-arbutus"
 strict: true
+keyed_groups:
+  # add hosts to tag_Name_value groups for each aws_ec2 host's tags.Name variable
+  - key: openstack.metadata.ansible_host_groups
+    separator: ""

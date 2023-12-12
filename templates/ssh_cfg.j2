@@ -1,7 +1,7 @@
 Host {{ internal_subnet_network_address }}.*
   User ubuntu
   StrictHostKeyChecking no
-  ProxyCommand ssh -F files/ssh.cfg -W %h:%p westcloud
+  ProxyCommand ssh -F files/ssh.cfg -W %h:%p headnode
   IdentityFile ~/.ssh/westcloud.pem
 
 Host headnode {{ login_node_public_ip }}
