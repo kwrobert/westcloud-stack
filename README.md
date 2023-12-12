@@ -4,10 +4,14 @@ This is a collection of heat templates, scripts, and Ansible playbooks to deploy
 
 ## Prerequisites
 
+Do all this from the root of the repo to set up your machine for running all the Ansible playbooks in this repo:
 
 - Install Ansible and extra dependencies: `pipx install ansible --include-deps && pipx inject ansible openstacksdk`
 - Install openstack Ansible collection: `ansible-galaxy collection install openstack.cloud`
 - Install openstack client: `pipx install --include-deps openstackclient`
+- Create the private directory for storing secrets: `mkdir private`
+- Create the vault password file within the private directory: `echo "ask kyle for this string" > private/vault_password`
+
 
 ## Useful Commands
 
