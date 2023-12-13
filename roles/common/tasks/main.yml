@@ -1,6 +1,10 @@
 ---
 # This playbook contains common plays that will be run on all nodes.
 
+- name: Configure filesystem
+  tags: ["disks"]
+  import_tasks: configure_filesystem.yml
+
 - name: Install packages
   tags: ["install_packages"]
   import_tasks: install_packages.yml
@@ -9,13 +13,14 @@
   tags: ["networking"]
   import_tasks: configure_networking.yml
 
-- name: Configure disks
-  tags: ["disks"]
-  import_tasks: configure_disks.yml
-
 - name: Configure Ceph share
   tags: ["ceph"]
   import_tasks: configure_ceph_share.yml
+
+- name: Configure Dask
+  tags: ["dask"]
+  import_tasks: configure_dask.yml
+
 
 # - name: Upload dispy service file
 #   tags: ['dispy']

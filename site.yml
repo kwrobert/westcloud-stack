@@ -93,10 +93,12 @@
 - name: Apply Common Configuration To All Nodes
   hosts: all
   roles:
-    - role: common
-      tags: ['common']
+    # Configure all the disks first, because filesystem permissions and whatnot
+    # one those mount points get configured after in the common role
     - role: data-disks
       tags: ['disk']
+    - role: common
+      tags: ['common']
 
 - name: Setup login node
   hosts: login
@@ -107,8 +109,7 @@
 - name: Setup compute nodes
   hosts: compute
   vars:
-    dask:
-      scheduler_ip_address: "{{ hostvars['headnode']['ansible_facts']['ansible_default_ipv4']['address'] }}"
+    dask_scheduler_ip_address: "{{ hostvars['headnode']['ansible_facts']['default_ipv4']['address'] }}"
   roles:
     - role: compute
       tags: ['compute']

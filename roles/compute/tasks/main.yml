@@ -3,6 +3,16 @@
 - name: deploy dworker service
   become: true
   become_method: sudo
+  tags: ['dask']
   template:
-    src: dworker.service.j2
-    dest: /usr/lib/systemd/system/dworker.service
+    src: dask-worker.service.j2
+    dest: /usr/lib/systemd/system/dask-worker.service
+
+- name: start dask worker service
+  become: true
+  become_method: sudo
+  tags: ['dask']
+  ansible.builtin.systemd_service:
+    state: started
+    daemon_reload: true
+    name: dask-worker

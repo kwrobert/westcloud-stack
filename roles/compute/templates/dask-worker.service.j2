@@ -1,0 +1,14 @@
+[Unit]
+Description=dask-worker
+
+[Service]
+Restart=always
+RestartSec=20
+TimeoutStartSec=0
+User={{ dask_user }}
+Group={{ dask_user }}
+
+ExecStart=/home/{{ dask_user }}/.local/bin/dask worker --nworkers {{ dask_num_workers }} --dashboard-address {{ dask_dashboard_port }} {{ dask_scheduler_ip_address }}:{{ dask_scheduler_port }}
+
+[Install]
+WantedBy=multi-user.target

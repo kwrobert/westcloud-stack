@@ -1,0 +1,31 @@
+---
+- name: Create dask config directory
+  become: yes
+  become_method: sudo
+  tags: ["dask"]
+  ansible.builtin.file:
+    path: /etc/dask
+    state: directory
+    owner: "{{ dask_user }}"
+    group: "{{ dask_user }}"
+    recurse: yes
+
+- name: Create dask logfile
+  become: yes
+  become_method: sudo
+  tags: ["dask"]
+  ansible.builtin.file:
+    path: "{{ dask_log_file_path }}"
+    state: touch
+    owner: "{{ dask_user }}"
+    group: "{{ dask_user }}"
+
+- name: Create dask config file
+  become: yes
+  become_method: sudo
+  tags: ["dask"]
+  ansible.builtin.template:
+    src: dask_config.yml.j2
+    dest: /etc/dask/config.yml
+    owner: "{{ dask_user }}"
+    group: "{{ dask_user }}"

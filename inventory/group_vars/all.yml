@@ -88,6 +88,7 @@ global_pip_packages:
   - dispy
   - psutil
 
-dask:
-  scheduler_port: 8786 
-  dashboard_port: 8787
+dask_scheduler_port: 8786 
+dask_dashboard_port: 8787
+dask_log_file_path: /var/log/dask.log
+dask_user: ubuntu

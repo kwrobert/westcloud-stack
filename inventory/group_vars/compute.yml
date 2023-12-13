@@ -5,6 +5,5 @@ data_disks:
     type: standard
     fs_type: ext4
 
-dask:
-  num_workers: auto
+dask_num_workers: auto
 

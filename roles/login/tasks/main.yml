@@ -14,6 +14,16 @@
 - name: deploy dask scheduler service
   become: true
   become_method: sudo
-  ansible.builin.template:
-    src: dscheduler.service.j2
-    dest: /usr/lib/systemd/system/dscheduler.service
+  tags: ['dask']
+  ansible.builtin.template:
+    src: dask-scheduler.service.j2
+    dest: /usr/lib/systemd/system/dask-scheduler.service
+
+- name: start dask scheduler service
+  become: true
+  become_method: sudo
+  tags: ['dask']
+  ansible.builtin.systemd_service:
+    state: started
+    daemon_reload: true
+    name: dask-scheduler
