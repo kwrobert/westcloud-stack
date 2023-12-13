@@ -1,45 +1,19 @@
 ---
 # This playbook contains common plays that will be run on all nodes.
 
-- name: Create /data directory
-  become: yes
-  become_method: sudo
-  file: 
-    path: /data
-    state: directory
-
-- name: Make ext4 filesystem on /dev/vdc
-  become: yes
-  become_method: sudo
-  filesystem: 
-    fstype: ext4
-    dev: /dev/vdc
-
-- name: Mount /dev/vdc to /data
-  become: yes
-  become_method: sudo
-  mount: 
-    src: /dev/vdc
-    path: /data
-    fstype: ext4
-    state: mounted
-
 - name: Change permissions on /data directory
-  become: yes
+  become: true
   become_method: sudo
-  file: 
+  ansible.builtin.file: 
     path: /data
     state: directory
     owner: ubuntu
     group: ubuntu
     recurse: yes
 
-- name: Install additional packages on login node
-  become: yes
+- name: deploy dask scheduler service
+  become: true
   become_method: sudo
-  apt:
-    name:
-      - yadm
-      - vim
-    state: latest
-    force_apt_get: yes
+  ansible.builin.template:
+    src: dscheduler.service.j2
+    dest: /usr/lib/systemd/system/dscheduler.service

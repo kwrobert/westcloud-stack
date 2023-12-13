@@ -1,0 +1,22 @@
+- name: Update/upgrade existing packages
+  become: yes
+  become_method: sudo
+  apt:
+    update_cache: yes
+    upgrade: yes
+
+- name: Install apt packages
+  become: yes
+  become_method: sudo
+  ansible.builtin.apt:
+    name: "{{ apt_packages }}"
+    state: latest
+
+# Become root so packages get installed system-wide
+- name: Install global Python packages
+  # become: yes
+  # become_method: sudo
+  ansible.builtin.pip:
+    name: "{{ global_pip_packages }}"
+    executable: /usr/bin/pip3
+    state: latest

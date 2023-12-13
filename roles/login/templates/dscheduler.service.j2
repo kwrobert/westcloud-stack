@@ -1,0 +1,12 @@
+[Unit]
+Description=dask-scheduler
+
+[Service]
+Restart=always
+RestartSec=20
+TimeoutStartSec=0
+
+ExecStart=dask scheduler --port {{ dask.scheduler_port }} --dashboard-address {{ dask.dashboard_port }} --no-show
+
+[Install]
+WantedBy=multi-user.target

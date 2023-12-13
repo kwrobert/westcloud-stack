@@ -1,8 +1,10 @@
-global_pip_packages:
-  - dask[complete]
-  - suffix_trees 
-  - mpl_render
-  - generic_escape
-  - simudo
-  - dispy
-  - psutil
+data_disks:
+  # Mount the non-root ephemeral disk to /tmp
+  - path: /tmp
+    devices: ['/dev/disk/by-label/ephemeral0']
+    type: standard
+    fs_type: ext4
+
+dask:
+  num_workers: auto
+

@@ -1,0 +1,10 @@
+---
+roles:
+  - name: data-disks
+    src: ssh://git@github.com/kwrobert/ansible-role-data-disks.git
+    version: master
+    scm: git
+
+collections:
+  - name: openstack.cloud
+    version: 2.2.0

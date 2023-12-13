@@ -3,8 +3,7 @@
 - name: Deploy Dask cluster Heat stack
   hosts: localhost
   connection: local
-  tags: 
-    - deploy_stack
+  tags: ["deploy_infra", "infra"]
   tasks: 
     - name: Create stack
       openstack.cloud.stack:
@@ -55,7 +54,7 @@
 - name: Modify sshd_config on headnode
   gather_facts: no
   hosts: headnode
-  tags: ['login']
+  tags: ['login', 'ssh']
   pre_tasks:
     - name: Wait for headnode to be reachable
       ansible.builtin.wait_for_connection:
@@ -96,16 +95,20 @@
   roles:
     - role: common
       tags: ['common']
+    - role: data-disks
+      tags: ['disk']
 
-# - name: Setup Head Node
-#   hosts: login
-#   roles:
-#     - role: login
-#       tags: ['login']
+- name: Setup login node
+  hosts: login
+  roles:
+    - role: login
+      tags: ['login']
 
-# - name: Deploy Optics Code
-#   hosts: all
-#   roles:
-#     - role: optics
-#       tags: ['optics']
-
+- name: Setup compute nodes
+  hosts: compute
+  vars:
+    dask:
+      scheduler_ip_address: "{{ hostvars['headnode']['ansible_facts']['ansible_default_ipv4']['address'] }}"
+  roles:
+    - role: compute
+      tags: ['compute']

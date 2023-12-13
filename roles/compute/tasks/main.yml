@@ -1,0 +1,8 @@
+---
+# tasks file for compute
+- name: deploy dworker service
+  become: true
+  become_method: sudo
+  template:
+    src: dworker.service.j2
+    dest: /usr/lib/systemd/system/dworker.service

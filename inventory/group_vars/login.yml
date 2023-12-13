@@ -1,0 +1,11 @@
+data_disks:
+  # Mount the non-root ephemeral disk to /tmp
+  - path: /tmp
+    devices: ['/dev/disk/by-label/ephemeral0']
+    type: standard
+    fs_type: ext4
+  # Mount the large data disk to /data
+  - path: /data
+    devices: ['/dev/vdc']
+    type: standard
+    fs_type: ext4

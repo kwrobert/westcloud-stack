@@ -1,113 +1,21 @@
 ---
 # This playbook contains common plays that will be run on all nodes.
 
-- name: Update/upgrade existing packages
-  become: yes
-  become_method: sudo
-  apt:
-    update_cache: yes
-    upgrade: yes
+- name: Install packages
+  tags: ["install_packages"]
+  import_tasks: install_packages.yml
 
-- name: Install apt packages
-  become: yes
-  become_method: sudo
-  ansible.builtin.apt:
-    name: "{{ apt_packages }}"
-    state: latest
+- name: Configure networking
+  tags: ["networking"]
+  import_tasks: configure_networking.yml
 
-# Become root so packages get installed system-wide
-- name: Install global Python packages
-  # become: yes
-  # become_method: sudo
-  ansible.builtin.pip:
-    name: "{{ global_pip_packages }}"
-    executable: /usr/bin/pip3
-    state: latest
+- name: Configure disks
+  tags: ["disks"]
+  import_tasks: configure_disks.yml
 
-- name: Update /etc/hosts
-  ansible.builtin.lineinfile:
-    dest: /etc/hosts
-    # regexp: "{{ hostvars[item]['ansible_default_ipv4']['address'] }}.*{{ item }}$"
-    # line: "{{ hostvars[item]['ansible_default_ipv4']['address'] }} {{item}}"
-    regexp: "{{ hostvars[item]['ansible_host'] }}.*{{ item }}$"
-    line: "{{ hostvars[item]['ansible_host'] }} {{item}}"
-    state: present
-  become: yes
-  become_method: sudo
-  with_items: "{{ groups.all }}"
-
-- name: Create /mnt/data directory
-  become: yes
-  become_method: sudo
-  ansible.builtin.file:
-    path: /mnt/data
-    state: directory
-    owner: ubuntu
-    group: ubuntu
-    recurse: yes
-
-- name: Create Ceph config directory
-  become: yes
-  become_method: sudo
+- name: Configure Ceph share
   tags: ["ceph"]
-  ansible.builtin.file:
-    path: "{{ ceph_config_directory }}"
-    state: directory
-    owner: root
-    group: root
-    recurse: yes
-
-- name: Create Ceph share mountpoint at {{ ceph_share_mountpoint }}
-  become: yes
-  become_method: sudo
-  tags: ["ceph"]
-  ansible.builtin.file:
-    path: "{{ ceph_share_mountpoint }}"
-    state: directory
-    owner: ubuntu
-    group: ubuntu
-    recurse: yes
-
-- name: Create Ceph share key config file
-  become: yes
-  become_method: sudo
-  tags: ["ceph"]
-  ansible.builtin.template:
-    src: ceph_fullkey_config.j2
-    dest: "{{ ceph_config_directory }}/client.fullkey.{{ ceph_share_user }}"
-    owner: root
-    group: root
-
-- name: Create Ceph share key file
-  become: yes
-  become_method: sudo
-  tags: ["ceph"]
-  ansible.builtin.template:
-    src: ceph_keyonly_config.j2
-    dest: "{{ ceph_config_directory }}/client.keyonly.{{ ceph_share_user }}"
-    owner: root
-    group: root
-
-- name: Create Ceph config file
-  become: yes
-  become_method: sudo
-  tags: ["ceph"]
-  ansible.builtin.template:
-    src: ceph.conf.j2
-    dest: "{{ ceph_config_directory }}/ceph.conf"
-    owner: root
-    group: root
-
-- name: Configure persistent Ceph mount
-  become: yes
-  become_method: sudo
-  tags: ["ceph"]
-  ansible.posix.mount:
-    state: mounted
-    fstype: ceph
-    src: "{{ ceph_share_user }}@.{{ ceph_share_fs_name }}={{ ceph_share_subdirectory }}"
-    path: "{{ ceph_share_mountpoint }}"
-    opts: "secretfile={{ ceph_config_directory }}/client.keyonly.{{ ceph_share_user }}"
+  import_tasks: configure_ceph_share.yml
 
 # - name: Upload dispy service file
 #   tags: ['dispy']

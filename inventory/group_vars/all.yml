@@ -27,6 +27,7 @@ apt_packages:
   - tree
   - build-essential
   - unzip
+  - vim
   # Ceph dependencies
   - ceph-common
   - ceph-fuse
@@ -86,3 +87,7 @@ global_pip_packages:
   - simudo
   - dispy
   - psutil
+
+dask:
+  scheduler_port: 8786 
+  dashboard_port: 8787
