@@ -28,6 +28,8 @@ apt_packages:
   - build-essential
   - unzip
   - vim
+  - fio
+  - jq
   # Ceph dependencies
   - ceph-common
   - ceph-fuse
@@ -92,3 +94,25 @@ dask_scheduler_port: 8786
 dask_dashboard_port: 8787
 dask_log_file_path: /var/log/dask.log
 dask_user: ubuntu
+
+# Users to be created
+human_users:
+  - username: krobert
+    full_name: Kyle Robertson
+    groups: ["sudo", "dask_user"]
+    append_groups: true
+    authorized_ssh_keys:
+      # Personal macbook key
+      - "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDxJYFHBMrjA8R785ReUj3VcYIOpuUEUoUJaBi9gIcM5c4UFp3a3fS3pqVLF6u55kOx3JLGOiExZf86IhJKe7LN3vpsHVYDGmjErzEXrzxZGF+zbKgL57kwayYDDZc6A8m7XbrntmjVgrCBOHj4WE62LgiZHUHKOtS5YSmicd1XAuJ5uAj+46ceJw/J0fkAw+dACV0NAWJPlXZLxfmsUgn/LMSzQA1XiWVP46RMzyc8dvkRLzmcB2kSVUTa7ApAlDtLA0iqVtRnEkD0GRLWnWw1hUIMhIjGISXYryU2Dim1ZPMG4CVIbPGtHUTHNaeLE38EWdvJHPuygqpbNE0wpvZZ"
+      # Westcloud public key
+      - "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCld26w9ZraowQrK8oSoogVEi5ekDHQ+h9UvWnxyl5YWHMAYmskkNn/5KUQZvb53e7kKIRmm8F+zeKDfoNlmZaNPbi7AswG4Vc3upl1O0xRVKHzOKfGlwcgcOOIoQ2Ma2cCurCL91xDssKb7Fizr88r3O/ElBO7OZI5gJQVu+3xxRpVEeDMRP5Xk2350di/nICDyMqTMdlxKotFwCAaZsFieRki75+KUkftzL3Oi3qceswtjVzJwehgBYsbo0B00pfYOtn83cU3pSzyDaqDExjJF4ti4fY+gUIHNWQlKApQ5+XIDJOOC3WZVuME0bOLnKc0dSWvRVOOZrCcRwQCMUrD" 
+  - username: jkrich
+    full_name: Jacob Krich
+    groups: ["sudo", "dask_user"]
+    append_groups: true
+    authorized_ssh_keys:
+      - "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCytOYn6zJyKMDYj5Sgi+gj+tMoiEMZ7auW2YjV7MTFrbcrdiigOaIkH30EEO636AxPn+BKTK+1NnLzqe+tjSt3O5jUPidAV2JezrIC9WmDoxeHyT5kjzJCHaQdWz9zZUASD5IpAP88Ini6TokWTXsB11Q7vVBbln6XjA3D+lMOmME0vDjke66dGsNbC+3AkSW0vKbHtvMKP7VodUBh2TWjTXbVKLO8Q8EzCsYqmWtcW1h3kSYGb05UIkLJ9USJCztT9t7lfdHvFWR//GrG6ZCqDrmrTRictP3J5o3nTRv6YmuOYHbmot1Ttt2kpuZONfZ12Bxw8pIjePDHa/O8QQrf jacob@Jacobs-iMac.local"
+  - username: dxia
+    full_name: Daisy
+    groups: ["dask_user"]
+    append_groups: true

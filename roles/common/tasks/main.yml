@@ -13,6 +13,10 @@
   tags: ["networking"]
   import_tasks: configure_networking.yml
 
+- name: Create users
+  tags: ["filesystem", "users", "ssh"] 
+  import_tasks: create_users.yml
+
 - name: Configure Ceph share
   tags: ["ceph"]
   import_tasks: configure_ceph_share.yml

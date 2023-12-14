@@ -1,0 +1,34 @@
+---
+- name: Ensure all groups for all users exist
+  become: true
+  become_method: sudo
+  vars:
+    groups_to_create: "{{ human_users | map(attribute='groups') | flatten | unique }}" 
+  ansible.builtin.group:
+    name: "{{ item }}"
+    state: present
+  loop: "{{ groups_to_create }}" 
+
+- name: Add the user "{{ item['username'] }}"
+  become: true
+  become_method: sudo
+  ansible.builtin.user:
+    name: "{{ item['username'] }}"
+    state: present
+    create_home: true
+    comment: "{{ item['full_name'] }}"
+    append: "{{ item['append_groups'] }}" 
+    groups: "{{ item['groups'] }}"
+  loop: "{{ human_users }}"
+
+# TODO: Remove any keys that exist in authorized_keys file but are not in
+# item.authorized_ssh_keys list
+- name: Configure authorized SSH keys for "{{ item['username'] }}"
+  become: true
+  become_method: sudo
+  ansible.posix.authorized_key:
+    user: "{{ item['username'] }}"
+    state: present
+    key: "{{ item['authorized_ssh_keys'] | join('\n') }}"
+  when: (item['authorized_ssh_keys'] is defined) and ((item['authorized_ssh_keys'] | length) > 0)
+  loop: "{{ human_users }}"

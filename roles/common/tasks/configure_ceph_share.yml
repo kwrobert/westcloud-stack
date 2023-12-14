@@ -60,3 +60,15 @@
     src: "{{ ceph_share_user }}@.{{ ceph_share_fs_name }}={{ ceph_share_subdirectory }}"
     path: "{{ ceph_share_mountpoint }}"
     opts: "secretfile={{ ceph_config_directory }}/client.keyonly.{{ ceph_share_user }}"
+
+- name: Create per-user share directories
+  become: yes
+  become_method: sudo
+  tags: ["ceph", "filesystem", "users"]
+  ansible.builtin.file:
+    path: "{{ ceph_share_mountpoint }}/{{ item['username'] }}"
+    state: directory
+    owner: "{{ item['username'] }}"
+    group: "{{ item['username'] }}"
+    recurse: yes
+  loop: "{{ human_users }}"
