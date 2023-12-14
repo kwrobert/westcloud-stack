@@ -18,7 +18,6 @@
     state: directory
     owner: ubuntu
     group: ubuntu
-    recurse: yes
 
 - name: Create Ceph share key config file
   become: yes
