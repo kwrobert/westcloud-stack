@@ -50,6 +50,22 @@ clouds:
 
 ## Useful Commands
 
+### Tunnel Dask Cluster to your local machine
+
+Tunnel the Dask scheduler to your local machine:
+
+```
+ssh -F files/ssh.cfg -N -L 8786:localhost:8786 headnode
+```
+
+Tunnel Dask dashboard to your local machine:
+
+```
+ssh -F files/ssh.cfg -N -L 8787:localhost:8787 headnode
+```
+
+Now go to localhost:8787 in your browser to see the Dask dashboard.
+
 ### Install all the openstack commands
 
 ```
