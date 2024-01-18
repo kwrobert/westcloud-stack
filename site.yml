@@ -7,7 +7,7 @@
   tasks: 
     - name: Create stack
       openstack.cloud.stack:
-        cloud: def-jkrich-arbutus
+        cloud: "def-jkrich-arbutus"
         name: "def-jkrich-dask-cluster-stack"
         state: present
         template: "files/heat/cluster.yaml"
