@@ -5,7 +5,7 @@ data_disks:
     type: standard
     fs_type: ext4
   # Mount the large data disk to /data
-  - path: /data
+  - path: "{{ persistent_volume_mountpoint }}"
     devices: ['/dev/vdc']
     type: standard
     fs_type: ext4

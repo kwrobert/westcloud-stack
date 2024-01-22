@@ -4,8 +4,8 @@
   ansible.builtin.file:
     path: /mnt/data
     state: directory
-    owner: ubuntu
-    group: ubuntu
+    owner: "{{ ansible_ssh_user }}"
+    group: "{{ ansible_ssh_user }}"
     recurse: yes
 
 - name: Ensure correct permissions on /tmp

@@ -54,7 +54,7 @@
 - name: Modify sshd_config on headnode
   gather_facts: no
   hosts: headnode
-  tags: ['login', 'ssh']
+  tags: ['login', 'ssh', 'node_config']
   pre_tasks:
     - name: Wait for headnode to be reachable
       ansible.builtin.wait_for_connection:
@@ -89,27 +89,7 @@
         name: ssh
         state: restarted
 
-# Make nodes satisfy roles
-- name: Apply Common Configuration To All Nodes
-  hosts: all
-  roles:
-    # Configure all the disks first, because filesystem permissions and whatnot
-    # one those mount points get configured after in the common role
-    - role: data-disks
-      tags: ['disk']
-    - role: common
-      tags: ['common']
+- name: Configure cluster nodes
+  tags: ["node_config"]
+  ansible.builtin.import_playbook: configure_nodes.yml
 
-- name: Setup login node
-  hosts: login
-  roles:
-    - role: login
-      tags: ['login']
-
-- name: Setup compute nodes
-  hosts: compute
-  vars:
-    dask_scheduler_ip_address: "{{ hostvars['headnode']['ansible_facts']['default_ipv4']['address'] }}"
-  roles:
-    - role: compute
-      tags: ['compute']

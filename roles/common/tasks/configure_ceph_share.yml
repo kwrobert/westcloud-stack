@@ -16,8 +16,8 @@
   ansible.builtin.file:
     path: "{{ ceph_share_mountpoint }}"
     state: directory
-    owner: ubuntu
-    group: ubuntu
+    owner: "{{ ansible_ssh_user }}"
+    group: "{{ ansible_ssh_user }}"
 
 - name: Create Ceph share key config file
   become: yes

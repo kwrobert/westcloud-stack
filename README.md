@@ -1,5 +1,9 @@
 # Krich Group Openstack Autoscaling Dask Cluster
 
+## TODO
+ 
+ - Scratch disks
+
 This is a collection of heat templates, scripts, and Ansible playbooks to deploy a Dask cluster on the Arbutus Openstack environment.
 
 ## Prerequisites
@@ -48,27 +52,39 @@ clouds:
     # log_level: debug
 ```
 
+After you've added the above to your `clouds.yaml` file, you need to set an environment variable specifying which cloud environment you'd like to work on. Do that with
+
+```
+export OS_CLOUD=def-jkrich-arbutus
+```
+
+Then test it out with a simple command like
+
+```:
+openstack image list
+```
+
 ## Deploying the Cluster
 
-We use Ansible as the orchestration engine to:
+We use Ansible as the orchestration engine that does the following things:
 
-  - Provision all the infrastructure via the Openstack Heat Stack
-  - Set up your local SSH config file for connecting to all the nodes in the cluster via the login node
-  - Install all the software on the cluster nodes for running Dask
+  - Provisions all the infrastructure using the Openstack Heat infrastructure templates in `files/heat/`
+  - Sets up a local SSH config file for connecting to all the nodes in the cluster via the login node in `files/ssh.cfg`
+  - Installs all the software on the cluster nodes for running Dask and Simudo
 
-To see the tasks that will be run, run the following command:
+To see the tasks that will be run by Ansible, execute the following command:
 
 ```
 ansible-playbook -i inventory --vault-password-file private/vault_password -v site.yml --list-tasks
 ```
 
-To deploy the cluster, run the following command:
+To deploy the entire cluster from scratch, run the following command:
 
 ```
 ansible-playbook -i inventory --vault-password-file private/vault_password site.yml
 ```
 
-This will create a relatively small cluster by default. To create a larger cluster, you can specify the minimum number of compute nodes to create by editing the `min_cluster_size` variable in the `files/heat/env.yaml` file. You can also scale the number of compute nodes in the cluster up and down after it's been created (see below).
+This will create a relatively small cluster by default. To create a larger cluster, you can specify the minimum number of compute nodes to create by editing the `min_cluster_size` variable in the `files/heat/env.yaml` file. The `files/heat/env.yaml` file contains all the configurable parameters for deploying the cluster infrastructure. You can also scale the number of compute nodes in an existing cluster up and down automatically after it's been created (see below).
 
 ## Scaling the cluster
 
@@ -87,8 +103,13 @@ And to scale down:
 These scripts will scale the cluster up and down one machine at a time. To scale up/down by more than one machine at a time, just run the either of the commands in a small loop:
 
 ```
+for i in $(seq 1 ${NUMBER_OF_NODES_TO_ADD}); do ./scale_up.sh; done
+``` 
 
-for i in $(seq 1 ${NUMBER_TO_SCALE}); do ./scale_up.sh; done
+or
+
+```
+for i in $(seq 1 ${NUMBER_OF_NODES_TO_REMOVE}); do ./scale_down.sh; done
 ``` 
 
 ## Testing the cluster
@@ -114,19 +135,36 @@ pip install "dask[complete]"
 Next, use SSH tunneling to tunnel the important Dask services to your local machine:
 
 ```
-ssh -F files/ssh.cfg -N -L 8786:localhost:8786 headnode
-ssh -F files/ssh.cfg -N -L 8787:localhost:8787 headnode
+ssh -F files/ssh.cfg -f -N -L 8786:localhost:8786 headnode
+ssh -F files/ssh.cfg -f -N -L 8787:localhost:8787 headnode
 ```
 
 Open http://localhost:8787 in your browser to see the Dask dashboard, which you can use to monitor the cluster and visualize your running jobs.
 
-At last, you can run a test script that runs a small parameter sweep of Simudo simulations on the Dask cluster with the following command:
+At last, you can run a test script that runs a small parameter sweep of Simudo simulations as the `ubuntu` user on the Dask cluster with the following command:
 
 ```
 python3 test_dask.py
 ```
 
-Keep an eye on the browser to see the jobs running on the cluster, their status (failure, success, etc), and stats about their runtime and resource consumption.
+Keep an eye on the dashboarx to see the jobs running on the cluster, their status (failure, success, etc), and stats about their runtime and resource consumption. You should also see some useful terminal output indicating what the script is doing. 
+
+When the script completes, SSH into the login node by running 
+
+```
+ssh -F files/ssh.cfg headnode
+```
+
+from the root of the repo. See if the data made it over to the fileshare:
+
+```
+
+ls /share/ubuntu
+```
+
+## Configuration of the Cluster
+
+There is a shared filesystem mounted at `/share` on all the nodes in the cluster. Every user should have their own directory at `/share/${username}` underneath the mountpoint. This is where you should put all your data, input files, code, etc. that you want to run on the cluster. This filesystem is backed by a CephFS filesystem, which is a distributed filesystem that is highly available and fault tolerant. It is also less performant than a locally attached disk, so you should only use it for data that you need to share between nodes in the cluster. For data that requires low latency access, a local disk is mounted at `/scratch` on each node for temporary storage.
 
 ## Useful Commands
 

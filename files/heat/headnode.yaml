@@ -31,6 +31,9 @@ parameters:
   sec_group:
     type: string
     description: Security group for headnodes
+  data_volume_size:
+    type: number
+    description: Size of the persistent data volume in GB
 
 resources:
   server:
@@ -51,8 +54,9 @@ resources:
     type: OS::Cinder::Volume
     properties:
       description: Data volume for the head node
-      name: HeadnodeDataVolume
-      size: 475
+      name: 
+        list_join: ["-", [{get_attr: [server, name]}, "data-vol"]]
+      size: {get_param: data_volume_size}
 
   volume_attachment:
     type: OS::Cinder::VolumeAttachment

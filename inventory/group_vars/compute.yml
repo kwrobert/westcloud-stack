@@ -4,6 +4,11 @@ data_disks:
     devices: ['/dev/disk/by-label/ephemeral0']
     type: standard
     fs_type: ext4
+  # Mount the non-root persistent disk to /scratch
+  - path: /scratch
+    devices: ['/dev/vdc']
+    type: standard
+    fs_type: ext4
 
 dask_num_workers: auto
 

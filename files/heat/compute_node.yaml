@@ -28,6 +28,9 @@ parameters:
   metadata:
     type: json
     description: Metadata to add to instance
+  data_volume_size:
+    type: number
+    description: Size of the persistent data volume in GB
   # name: 
   #   type: string
   #   description: Name of the instance. Provided by compute_node_cluster.yaml
@@ -48,6 +51,21 @@ resources:
           - {get_param: metadata }
       user_data_format: RAW
       user_data: {get_file: cloud-init.sh}
+
+  data_volume:
+    type: OS::Cinder::Volume
+    properties:
+      description: Data volume for the compute node
+      name: 
+        list_join: ["-", [{get_attr: [server, name]}, "data-vol"]]
+      size: {get_param: data_volume_size}
+
+  volume_attachment:
+    type: OS::Cinder::VolumeAttachment
+    properties:
+      instance_uuid: {get_resource: server}
+      volume_id: {get_resource: data_volume}
+      mountpoint: /dev/vdc
 
 outputs:
   server_ip:

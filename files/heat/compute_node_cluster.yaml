@@ -64,6 +64,9 @@ parameters:
     type: string
     label: Compute Node Security Group
     description: Security group for compute nodes to give them access to one another and to headnodes
+  compute_node_data_volume_size:
+    type: number
+    description: Size of the persistent data volume in GB
     
 resources:
   compute_cluster:
@@ -81,6 +84,7 @@ resources:
           network: {get_param: internal_net} 
           metadata: {"metering.stack": {get_param: "OS::stack_id"}}
           sec_group: {get_param: sec_group}
+          data_volume_size: {get_param: compute_node_data_volume_size}
           
   compute_cluster_scaleup_policy:
     type: OS::Heat::ScalingPolicy

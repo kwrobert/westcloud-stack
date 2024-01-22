@@ -93,6 +93,14 @@ parameters:
       type: string
       label: Keypair Name
       description: Name of preexisting keypair to use for ssh access to instances 
+    compute_node_data_volume_size:
+      type: number
+      label: Compute Node Data Volume Size (GB)
+      description: Size of the persistent data volume for compute nodes in GB
+    headnode_data_volume_size:
+      type: number
+      label: Headnode Data Volume Size (GB)
+      description: Size of the persistent data volume for the headnode in GB
       
 resources:
     cluster_networking:
@@ -113,6 +121,7 @@ resources:
         min_cluster_size: {get_param: min_cluster_size}
         image: { get_param: image }
         flavor: { get_param: compute_flavor }
+        compute_node_data_volume_size: {get_param: compute_node_data_volume_size}
         internal_net: 
           get_attr:
             - cluster_networking
@@ -132,6 +141,7 @@ resources:
         flavor: {get_param: headnode_flavor}
         image: {get_param: image}
         key_name: {get_param: keypair}
+        data_volume_size: {get_param: headnode_data_volume_size}
         internal_network: 
           get_attr:
             - cluster_networking
